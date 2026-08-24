@@ -11,7 +11,7 @@ Then open the local URL it prints (default http://localhost:8501).
 import pandas as pd
 import streamlit as st
 
-from theme import (CORAL, MUTED, TEAL, TEXT, dark_fig, donut_chart, inject_css,
+from theme import (CORAL, TEAL, TEXT, dark_fig, donut_chart, inject_css,
                     kpi_card, section_header)
 
 FILE = "Pilot_stcok availability.xlsx"
@@ -205,28 +205,11 @@ st.divider()
 # ---------------------------------------------------------------
 # Requisition & fulfilment
 # ---------------------------------------------------------------
-section_header("Requested / delivered vs. average monthly consumption")
-st.caption("100% = exactly one month's typical use. Values above 100% mean the facility "
-           "requested/received more than one month's worth.")
 fulfil = df.dropna(subset=["fulfilment_pct"])
 if fulfil.empty:
     st.caption("No in-stock fulfilment data in this view.")
 else:
-    agg = fulfil.groupby("Facility")[["fulfilment_pct", "request_vs_amc_pct", "delivery_vs_amc_pct"]].mean().round(1)
-
-    fig, ax = dark_fig((7.5, 0.9 * len(agg) + 1))
-    y = range(len(agg))
-    ax.barh([i + 0.18 for i in y], agg["request_vs_amc_pct"], height=0.32, label="Requested vs AMC", color=TEAL)
-    ax.barh([i - 0.18 for i in y], agg["delivery_vs_amc_pct"], height=0.32, label="Delivered vs AMC", color="#e0a94c")
-    ax.axvline(100, color=MUTED, linestyle="--", linewidth=1)
-    ax.text(100, len(agg) - 0.3, "100%", color=MUTED, fontsize=9, ha="center")
-    ax.set_yticks(list(y))
-    ax.set_yticklabels(agg.index, color=TEXT)
-    ax.set_xlabel("% of average monthly consumption")
-    legend = ax.legend(loc="lower right", frameon=False, fontsize=9)
-    for text in legend.get_texts():
-        text.set_color(TEXT)
-    st.pyplot(fig, width="stretch")
+    agg = fulfil.groupby("Facility")[["fulfilment_pct"]].mean().round(1)
 
     section_header("Requisition fulfilment")
     m1, m2 = st.columns(2)
