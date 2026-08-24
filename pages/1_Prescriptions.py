@@ -194,16 +194,14 @@ st.dataframe(pres[detail_cols].sort_values("Date of prescription", ascending=Fal
 
 st.divider()
 with st.expander(f"Data notes ({len(empty_cols)} columns excluded, quality flags, source)"):
-    bad_ids = pres_all["Patient / Prescription ID"].astype(str)
-    bad_ids = bad_ids[~bad_ids.str.match(r"^[0-9\-]+$")]
     st.markdown(
         f"- **{len(empty_cols)} columns were entirely blank** across all {len(pres_all)} lines and excluded: "
         "they only populate when a medicine is *not* available at the facility (order status, unit price, "
         "`total_cost_unserved`, RMS Regional/Central availability, distribution reason) — none of that "
         "branch has been triggered yet in this pilot.\n"
-        f"- **Patient / Prescription ID quality:** {len(bad_ids)} of {len(pres_all)} values don't look like "
-        f"IDs (e.g. `{bad_ids.iloc[0] if len(bad_ids) else ''}`) — a medicine name typed into the ID field. "
-        "Treat patient-level counts from this column with caution.\n"
+        "- **Patient / Prescription ID column removed:** the raw export had a field with values that could "
+        "be real patient identifiers (and, on one row, a medicine name typed into it by mistake) — dropped "
+        "before this data was shared, so patient-level counts aren't available here.\n"
         "- **Medicine names are free text** with visible typos (e.g. 'ciprofoxacin', 'Amlodipne') — fine for "
         "a pilot, but worth moving to a selectable list tied to the EML for cleaner rollup analysis.\n"
         f"- **Source:** `{FILE}`, sheets `Unserved Prescriptions - Pre...` and `prescription` "
