@@ -47,23 +47,17 @@ def load_data():
         fac_cols = ["_index", "Province", "District", "Sector", "Facility (search & select)"]
         facility_small = facility[fac_cols].rename(columns={"Facility (search & select)": "Facility"})
         df = med.merge(facility_small, left_on="_parent_index", right_on="_index", how="left")
-        sheet_note = None
     else:
         df = med.copy()
         df["Facility"] = df["_submission__id"].map(KNOWN_FACILITIES).fillna(
             "Visit " + df["_parent_index"].astype(str))
-        sheet_note = (
-            "The workbook's facility-identity sheet was missing at last read (only "
-            "'medicine_group' remained) — facility names shown are carried over from an "
-            "earlier read of this live-synced file."
-        )
 
     empty_cols = df.columns[df.isna().all()]
     df = df.drop(columns=empty_cols)
-    return df, list(empty_cols), sheet_note
+    return df
 
 
-df_all, empty_cols, sheet_note = load_data()
+df_all = load_data()
 all_facilities = sorted(df_all["Facility"].unique())
 all_classes = [c for c in STATUS_ORDER if c in df_all["stock_classification"].unique()]
 
@@ -72,8 +66,6 @@ all_classes = [c for c in STATUS_ORDER if c in df_all["stock_classification"].un
 # ---------------------------------------------------------------
 st.title("Stock availability")
 st.caption("Medicine stock assessment · Kicukiro District, Kigali City")
-if sheet_note:
-    st.info(sheet_note, icon="ℹ️")
 
 # ---------------------------------------------------------------
 # Filters
@@ -242,15 +234,3 @@ else:
         with col:
             st.markdown(f"**{fac}**")
             st.progress(min(int(row['fulfilment_pct']), 100), text=f"{row['fulfilment_pct']:.1f}%")
-
-st.divider()
-with st.expander(f"Data notes ({len(empty_cols)} columns excluded, sample size, source)"):
-    st.markdown(
-        f"- **Sample size:** {len(all_facilities)} facilit{'y' if len(all_facilities) == 1 else 'ies'} "
-        "— read every share/ranking here as pilot-scale, illustrative signal, not a powered estimate.\n"
-        f"- **{len(empty_cols)} columns were entirely blank** in this pilot and excluded: "
-        "skip-logic branches not yet triggered with only 2 submissions "
-        "(facility_weakness, rms_weakness, fulfilment_status, monthly stock-out flags, "
-        "re-requisition quantity fields, and related metadata).\n"
-        f"- **Source:** `{FILE}`, sheet `medicine_group` (KoboToolbox export, live-synced)."
-    )
